@@ -1,7 +1,18 @@
-# The container definition we want to use for developing our app
 box: php
-# Defining the dev pipeline
 dev:
+  steps:
+    - install-packages:
+        packages: git
+    - script:
+        name: install composer
+        code: curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
+    - script:
+        name: install dependencies
+        code: composer install --no-interaction
+    - internal/watch:
+        code: php -S 0.0.0.0:8000
+        reload: true
+build:
   steps:
     - install-packages:
         packages: git
@@ -16,6 +27,9 @@ dev:
     - script:
         name: install dependencies
         code: composer install --no-interaction
-    - internal/watch:
-        code: php -S 0.0.0.0:8000
-        reload: true
+    - script:
+        name: Serve application
+        code: php -S localhost:8000 >> /dev/null &
+    - script:
+        name: PHPUnit integration tests
+        code: phpunit --configuration phpunit.xml
